@@ -18,7 +18,6 @@ func Register(c *gin.Context) {
 	var body models.Auth
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
 	}
 
 	hashed, _ := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
@@ -30,9 +29,8 @@ func Register(c *gin.Context) {
 
 	if err := config.DB.Create(&user).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "username sudah digunakan"})
-		return
 	}
-	c.JSON(200, gin.H{"message": "registrasi berhasil", "user": user})
+	c.JSON(200, user)
 }
 
 func Login(c *gin.Context) {
@@ -41,7 +39,7 @@ func Login(c *gin.Context) {
 
 	var user models.Auth
 	if err := config.DB.First(&user, body.ID).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "username tidak ditemukan"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "username tidak ada"})
 		return
 	}
 
@@ -57,14 +55,13 @@ func Login(c *gin.Context) {
 	})
 
 	tokenString, _ := token.SignedString(jwtSecret)
-	c.JSON(200, gin.H{"message": "berhasil login", "token": tokenString})
+	c.JSON(200, gin.H{"message": "login berhasil", "token": tokenString})
 }
 
 func RequireAuth(c *gin.Context) {
 	tokenString := c.GetHeader("Authorization")
-
 	if tokenString == "" {
-		c.JSON(401, gin.H{"message": "token tidak ditemukan"})
+		c.JSON(401, gin.H{"message": "token tidak ada"})
 		c.Abort()
 		return
 	}

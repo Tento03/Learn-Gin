@@ -15,7 +15,7 @@ var DB *gorm.DB
 func ConnectDB() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("Warning: .env tidak ditemukan, menggunakan environment system")
+		log.Fatal("env not found")
 	}
 
 	user := os.Getenv("DB_USER")
@@ -23,12 +23,13 @@ func ConnectDB() {
 	host := os.Getenv("DB_HOST")
 	port := os.Getenv("DB_PORT")
 	name := os.Getenv("DB_NAME")
+
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		user, pass, host, port, name)
 
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatal("DB not connected", err)
+		log.Fatal("DB not connected")
 	}
 
 	DB = db

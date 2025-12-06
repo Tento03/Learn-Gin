@@ -15,39 +15,39 @@ import (
 var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 
 func Register(c *gin.Context) {
-	var user models.Auth
+	var body models.Auth
 
-	if err := c.Bind(&user); err != nil {
+	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	hashed, _ := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
+	hashed, _ := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
 
-	input := models.Auth{
-		Username: user.Username,
+	user := models.Auth{
+		Username: body.Username,
 		Password: string(hashed),
 	}
 
-	if err := config.DB.Create(&input).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "username sudah digunakan"})
+	if err := config.DB.Create(&user).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
-
-	c.JSON(200, gin.H{"message": "Registrasi", "user": input})
+	c.JSON(200, gin.H{"message": "register berhasil", "user": user})
 }
 
 func Login(c *gin.Context) {
 	var body models.Auth
-	c.Bind(&body)
+	c.ShouldBindJSON(&body)
 
 	var user models.Auth
-	if err := config.DB.First(&user, user.Username).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "user tidak ditemukan"})
+	if err := config.DB.Where("username = ?", body.Username).First(&user).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "username tidak ditemukan"})
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password)); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "password salah"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "password salah"})
 		return
 	}
 
@@ -57,16 +57,14 @@ func Login(c *gin.Context) {
 		"exp":      time.Now().Add(time.Hour * 24).Unix(),
 	})
 
-	tokenString, _ := token.SignedString(jwtSecret)
-
-	c.JSON(200, gin.H{"message": "Login Berhasil", "token": tokenString})
+	var tokenString, _ = token.SignedString(jwtSecret)
+	c.JSON(200, gin.H{"message": "login berhasil", "token": tokenString})
 }
 
 func RequireAuth(c *gin.Context) {
 	tokenString := c.GetHeader("Authorization")
-
 	if tokenString == "" {
-		c.JSON(401, gin.H{"error": "token tidak ada"})
+		c.JSON(401, gin.H{"error": "token tidak ditemukan"})
 		c.Abort()
 		return
 	}
@@ -80,6 +78,5 @@ func RequireAuth(c *gin.Context) {
 		c.Abort()
 		return
 	}
-
 	c.Next()
 }
