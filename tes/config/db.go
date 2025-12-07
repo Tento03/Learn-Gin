@@ -13,13 +13,12 @@ import (
 var DB *gorm.DB
 
 func ConnectDB() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("env tdk ditemukan")
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("env not found")
 	}
 
 	user := os.Getenv("DB_USER")
-	pass := os.Getenv("DB_PASSWORD")
+	pass := os.Getenv("DB_PASS")
 	host := os.Getenv("DB_HOST")
 	port := os.Getenv("DB_PORT")
 	name := os.Getenv("DB_NAME")
@@ -28,9 +27,9 @@ func ConnectDB() {
 
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatal("db not connected")
+		log.Fatal("DB not connected")
 	}
 
 	DB = db
-	fmt.Println("db connected")
+	fmt.Println("DB Connected")
 }

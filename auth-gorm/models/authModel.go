@@ -10,6 +10,7 @@ type User struct {
 
 type Auth struct {
 	gorm.Model
-	Username string `json:"username" gorm:"unique"`
-	Password string `json:"password"`
+	Username     string `json:"username" gorm:"unique"`
+	Password     string `json:"password"`
+	RefreshToken string `json:"refreshToken"`
 }
