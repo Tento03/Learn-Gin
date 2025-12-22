@@ -10,12 +10,8 @@ import (
 
 func main() {
 	config.ConnectDB()
-
 	config.DB.AutoMigrate(models.Auth{})
-
 	r := gin.Default()
-
 	routes.UserRoutes(r)
-
 	r.Run(":8080")
 }
